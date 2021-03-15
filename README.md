@@ -1,7 +1,5 @@
 # Autosave
-This is an autosave plugin for a game called
-# My summer car
-what it does is it saves the game every minute.
+This is an autosave plugin for My summer car. What it does is it saves the game every minute.
 # How to download
 - Download AutoSave.dll from the files above.
 - Place it into your plugins folder.
