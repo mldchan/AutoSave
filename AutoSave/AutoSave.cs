@@ -1,4 +1,7 @@
-﻿using HutongGames.PlayMaker;
+﻿using System;
+using System.IO;
+using System.Xml.Serialization;
+using HutongGames.PlayMaker;
 using MSCLoader;
 using UnityEngine;
 
@@ -29,6 +32,16 @@ namespace AutoSave
       public override void OnLoad()
       {
          _setupMenu = new Keybind("menu", "Open Menu", KeyCode.A, KeyCode.LeftAlt);
+         if (File.Exists(Path.Combine(ModLoader.GetModConfigFolder(this), "autoconfig.xml")))
+         {
+            XmlSerializer serializer = new XmlSerializer(typeof(AutoSaveClass));
+            FileStream stream = new FileStream(Path.Combine(ModLoader.GetModConfigFolder(this), "autoconfig.xml"),
+               FileMode.Open);
+            AutoSaveClass saveClass = serializer.Deserialize(stream) as AutoSaveClass;
+            _coolDownSetting = saveClass.interval;
+            stream.Close();
+            _intervalSettings.Value = _coolDownSetting;
+         }
       }
 
       public override void ModSettings()
@@ -51,6 +64,14 @@ namespace AutoSave
 
       public override void OnSave()
       {
+         XmlSerializer serializer = new XmlSerializer(typeof(AutoSaveClass));
+         if (File.Exists(Path.Combine(Application.persistentDataPath, "autoconfig.xml")))
+            File.Delete(Path.Combine(Application.persistentDataPath, "autoconfig.xml"));
+         FileStream stream = new FileStream(Path.Combine(Application.persistentDataPath, "autoconfig.xml"),
+            FileMode.Create);
+         AutoSaveClass saveClass = new AutoSaveClass {interval = _coolDownSetting};
+         serializer.Serialize(stream, saveClass);
+         stream.Close();
       }
 
       public override void OnGUI()
@@ -75,5 +96,11 @@ namespace AutoSave
             Application.LoadLevel(3);
          }
       }
+   }
+
+   [Serializable]
+   public class AutoSaveClass
+   {
+      public float interval;
    }
 }
