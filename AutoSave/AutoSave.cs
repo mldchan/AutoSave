@@ -1,85 +1,79 @@
-﻿using MSCLoader;
+﻿using HutongGames.PlayMaker;
+using MSCLoader;
 using UnityEngine;
-using HutongGames.PlayMaker;
-using System;
-using UnityEngine.UI;
 
 namespace AutoSave
 {
-    public class AutoSave : Mod
-    {
-        public override string ID => "AutoSave"; //Your mod ID (unique)
-        public override string Name => "AutoSave"; //You mod name
-        public override string Author => "MLDKYT"; //Your Username
-        public override string Version => "1.3"; //Version
+   public class AutoSave : Mod
+   {
+      private static float _coolDownSetting = 60;
 
-        public Keybind setupMenu;
+      private static readonly bool _settingsLoaded = false;
 
-        public static float coolDownSetting = 60;
+      private float _cooldown;
 
-        private static bool settingsLoaded = false;
+      private Settings _intervalSettings;
 
-        // Set this to true if you will be load custom assets from Assets folder.
-        // This will create subfolder in Assets folder for your mod.
-        public override bool UseAssetsFolder => false;
+      private Keybind _setupMenu;
+      public override string ID => "AutoSave";
+      public override string Name => "AutoSave";
+      public override string Author => "MLDKYT";
+      public override string Version => "1.3";
 
-        public override void OnNewGame()
-        {
-            // Called once, when starting a New Game, you can reset your saves here
-        }
+      public override bool UseAssetsFolder => false;
 
-        public override void OnLoad()
-        {
-            setupMenu = new Keybind("menu", "Open Menu", KeyCode.A, KeyCode.LeftAlt);
-        }
+      public override void OnNewGame()
+      {
+      }
 
-        public override void ModSettings()
-        {
-            Settings.AddHeader(this, "Settings", Color.black, Color.white);
-            Settings.AddSlider(this, new Settings("interval", "Interval", new Action(settingsChanged)), 30, 7200);
-        }
+      public override void OnLoad()
+      {
+         _setupMenu = new Keybind("menu", "Open Menu", KeyCode.A, KeyCode.LeftAlt);
+      }
 
-        public static void settingsChanged()
-        {
-            ModConsole.Print(new Settings("interval", "Interval", new Action(settingsChanged)).GetValue());
-        }
+      public override void ModSettings()
+      {
+         Settings.AddHeader(this, "Settings", Color.black, Color.white);
+         _intervalSettings = new Settings("interval", "Interval", SettingsChanged);
+         Settings.AddText(this, "Interval is measured in seconds.");
+         Settings.AddSlider(this, _intervalSettings, 30, 7200);
+      }
 
-        public override void OnMenuLoad()
-        {
-            if (!settingsLoaded)
-            {
-                ModConsole.Print("Set up settings.");
-            }
-        }
+      private void SettingsChanged()
+      {
+         _coolDownSetting = (float) _intervalSettings.GetValue();
+      }
 
-        public override void OnSave()
-        {
-            // Called once, when save and quit
-            // Serialize your save file here.
-        }
+      public override void OnMenuLoad()
+      {
+         if (!_settingsLoaded) ModConsole.Print("Set up settings.");
+      }
 
-        public override void OnGUI()
-        {
-            // Draw unity OnGUI() here
-        }
+      public override void OnSave()
+      {
+      }
 
-        private float cooldown = 0;
+      public override void OnGUI()
+      {
+      }
 
-        public override void Update()
-        {
-            // Update is called once per frame
-            if (FsmVariables.GlobalVariables.FindFsmString("PlayerCurrentVehicle").Value == "")
-            {
-                cooldown += Time.deltaTime;
-            }
+      public override void Update()
+      {
+         if (FsmVariables.GlobalVariables.FindFsmString("PlayerCurrentVehicle").Value == "")
+            _cooldown += Time.deltaTime;
 
-            if (cooldown > coolDownSetting && FsmVariables.GlobalVariables.FindFsmString("PlayerCurrentVehicle").Value == "")
-            {
-                cooldown = 0;
-                PlayMakerFSM.BroadcastEvent("SAVEGAME");
-                Application.LoadLevelAsync(1);
-                Application.LoadLevelAsync(3);
-            }
-        }
-    }
+         if (_cooldown > _coolDownSetting - 5)
+            GUI.Box(new Rect(Screen.width / 2 - 75, Screen.height / 2 - 10, 150, 20),
+               "Auto save in 5 seconds.");
+
+         if (_cooldown > _coolDownSetting &&
+             FsmVariables.GlobalVariables.FindFsmString("PlayerCurrentVehicle").Value == "")
+         {
+            _cooldown = 0;
+            PlayMakerFSM.BroadcastEvent("SAVEGAME");
+            Application.LoadLevel(1);
+            Application.LoadLevel(3);
+         }
+      }
+   }
 }
