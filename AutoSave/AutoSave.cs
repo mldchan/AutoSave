@@ -74,8 +74,15 @@ namespace AutoSave
          stream.Close();
       }
 
+      private bool _showWarning;
+
       public override void OnGUI()
       {
+         if (_showWarning)
+         {
+            GUI.Box(new Rect(Screen.width / 2 - 75, Screen.height / 2 - 10, 150, 20),
+               "Auto saving in 5 seconds, your game will lag!");
+         }
       }
 
       public override void Update()
@@ -83,9 +90,7 @@ namespace AutoSave
          if (FsmVariables.GlobalVariables.FindFsmString("PlayerCurrentVehicle").Value == "")
             _cooldown += Time.deltaTime;
 
-         if (_cooldown > _coolDownSetting - 5)
-            GUI.Box(new Rect(Screen.width / 2 - 75, Screen.height / 2 - 10, 150, 20),
-               "Auto save in 5 seconds.");
+         _showWarning = _cooldown > _coolDownSetting - 5;
 
          if (_cooldown > _coolDownSetting &&
              FsmVariables.GlobalVariables.FindFsmString("PlayerCurrentVehicle").Value == "")
